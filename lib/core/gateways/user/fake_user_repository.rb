@@ -3,9 +3,8 @@ class FakeUserRepository
     @users = []
   end
 
-  def save(user)
-    require 'securerandom'
-    user.id = SecureRandom.uuid
+  def save(user, env:)
+    user.id = env.id_generator.generate
     @users << user
   end
 

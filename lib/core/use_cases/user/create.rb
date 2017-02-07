@@ -7,14 +7,14 @@ module Core
         Success = Struct.new(:created_user_id)
         Failure = Struct.new(:validation_errors)
 
-        def self.execute(username:, repo:)
+        def self.execute(username:, env:, repo:)
           if username.empty?
             validation_failed(username: :required)
           elsif repo.find_by_username(username)
             validation_failed(username: :unique)
           else
             user = Core::Entities::User.new(username: username)
-            repo.save(user)
+            repo.save(user, env: env)
             user_created(user.id)
           end
         end
