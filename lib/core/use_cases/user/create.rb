@@ -9,11 +9,10 @@ module Core
             handler.validation_failed(username: :required)
           elsif repo.find_by_username(username)
             handler.validation_failed(username: :unique)
-          else
-            user = Core::Entities::User.new(username: username)
-            repo.save(user)
-            handler.user_created(user.id)
           end
+          user = Core::Entities::User.new(username: username)
+          repo.save(user)
+          handler.user_created(user.id)
         end
       end
     end
