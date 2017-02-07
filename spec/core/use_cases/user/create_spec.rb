@@ -23,18 +23,51 @@ describe 'Create user' do
   let(:env) { Core::Environment.new(FakeIdGenerator.new) }
 
   it 'requires a username' do
-    result = CreateUser.execute(username: '', env: env, repo: repo)
-    expect(result).to eql CreateUser::Failure.new(username: :required)
+    CreateUser.execute(username: '', env: env, repo: repo) do |r|
+      r.assert matches { CreateUser::Failure[validation_errors: {username: :required}] }
+    end
   end
 
   it 'requires usernames to be unique' do
-    CreateUser.execute(username: 'valid name', env: env, repo: repo)
-    result = CreateUser.execute(username: 'valid name', env: env, repo: repo)
-    expect(result).to eql CreateUser::Failure.new(username: :unique)
+    CreateUser.execute(username: 'valid name', env: env, repo: repo) do |r|
+      r.assert matches { CreateUser::Success }
+    end
+    CreateUser.execute(username: 'valid name', env: env, repo: repo) do |r|
+      r.assert matches { CreateUser::Failure[validation_errors: {username: :unique}] }
+    end
   end
 
   it 'sends an id for the created user back to the handler' do
-    result = CreateUser.execute(username: 'valid name', env: env, repo: repo)
-    expect(result).to eql CreateUser::Success.new(env.id_generator.generated[0])
+    CreateUser.execute(username: 'valid name', env: env, repo: repo) do |r|
+      r.assert matches { CreateUser::Success[created_user_id: !env.id_generator.generated[0]] }
+    end
+  end
+
+  it 'case handled' do
+    result = CreateUser.execute(username: 'valid name', env: env, repo: repo) do |r|
+      r.when matches { CreateUser::Success[created_user_id] } do |matched|
+        "Created user #{matched.created_user_id}"
+      end
+      r.when matches { CreateUser::Failure[validation_errors: {username: :required}] } do
+        'Validation failed because username was not provided'
+      end
+      r.when matches { CreateUser::Failure[validation_errors: {username: :unique}] } do
+        'Validation failed because username was not unique'
+      end
+    end
+    expect(result).to eql "Created user #{env.id_generator.generated[0]}"
+  end
+
+  it 'case not handled' do
+    expect do
+      CreateUser.execute(username: 'valid name', env: env, repo: repo) do |r|
+        r.when matches { CreateUser::Failure[validation_errors: {username: :required}] } do
+          'Validation failed because username was not provided'
+        end
+        r.when matches { CreateUser::Failure[validation_errors: {username: :unique}] } do
+          'Validation failed because username was not unique'
+        end
+      end
+    end.to raise_error /Failed to match/
   end
 end
