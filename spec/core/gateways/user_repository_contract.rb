@@ -4,9 +4,10 @@ def user_repository_contract(repo_class)
     let(:justin) { Core::Entities::User.new(username: 'Justin') }
     let(:bob) { Core::Entities::User.new(username: 'Bob') }
     let(:repo) { repo_class.new }
+    let(:env) { Core::Environment.new(Core::IdGenerator.new) }
     before do
-      repo.save(bob)
-      repo.save(justin)
+      repo.save(bob, env: env)
+      repo.save(justin, env: env)
     end
     it 'finds by name' do
       expect(repo.find_by_username(bob.username)).to eq bob

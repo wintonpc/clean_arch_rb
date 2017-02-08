@@ -9,11 +9,13 @@ module Core
         Success = Struct.new(:created_user_ids)
         Failure = Struct.new(:validation_errors)
 
-        Creator = Create.new do
+        Creator = Create.new do |r|
+
+        end
 
         def execute(usernames:, env:, repo:, &block)
           results = usernames.map do |username|
-            Create.execute(username: username, env: env, repo: repo, &handle_created)
+            Creator.execute(username: username, env: env, repo: repo)
           end
           StrictCaseMatcher.match(aggregate_result(results), &block)
         end
