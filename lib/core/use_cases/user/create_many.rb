@@ -10,7 +10,8 @@ module Core
         Failure = Struct.new(:validation_errors)
 
         Creator = Create.new do |r|
-
+          r.when matches { Create::Success }
+          r.when matches { Create::Failure }
         end
 
         def execute(usernames:, env:, repo:, &block)

@@ -1,0 +1,6 @@
+require 'rspec'
+require 'core/use_cases/user'
+require 'core/gateways/user/fake_user_repository'
+require 'core/domain/environment'
+require 'core/domain/id_generator'
+require 'core/use_cases/user/create_many'
