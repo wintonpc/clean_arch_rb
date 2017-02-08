@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   if spec.respond_to?(:metadata)
     spec.metadata['allowed_push_host'] = 'no pushing'
   else
-    raise 'RubyGems 2.0 or newer is required to protect against ' \
+    fail 'RubyGems 2.0 or newer is required to protect against ' \
       'public gem pushes.'
   end
 

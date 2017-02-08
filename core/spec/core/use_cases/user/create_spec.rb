@@ -37,5 +37,4 @@ describe 'Create user' do
     CreateUser.execute(username: 'valid name', handler: handler, repo: repo)
     expect(handler.spy_created_user_id).to be
   end
-  
 end
