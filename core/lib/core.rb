@@ -1,4 +1,4 @@
-require "core/version"
+require 'core/version'
 
 module Core
   # Your code goes here...
