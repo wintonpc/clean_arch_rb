@@ -11,7 +11,7 @@ module Core
           return handler ? handler.call(m.to_openstruct) : nil
         end
       end
-      raise "Failed to match: #{value}"
+      raise MatchFailedError, "Failed to match: #{value}"
     end
 
     def when(pattern_proc, &handler)
@@ -21,10 +21,25 @@ module Core
       cases << [pattern, handler]
     end
 
+    def self.assert_cases_are_handled(handler, cases)
+      cases.each do |c|
+        begin
+          match(c, &handler)
+        rescue MatchFailedError
+          raise UnhandledCaseError, "You need to handle this case: #{c}"
+        end
+      end
+    end
+
     alias_method :assert, :when
 
     def cases
       @cases ||= []
+    end
+
+    class MatchFailedError < RuntimeError
+    end
+    class UnhandledCaseError < RuntimeError
     end
   end
 end

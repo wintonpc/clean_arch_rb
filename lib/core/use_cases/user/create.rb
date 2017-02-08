@@ -8,8 +8,8 @@ module Core
         Success = Struct.new(:created_user_id)
         Failure = Struct.new(:validation_errors)
 
-        def initialize(&handler)
-          validate_handler(handler)
+        def initialize(validate: true, &handler)
+          validate_handler(handler) if validate
           @handler = handler
         end
 
@@ -29,13 +29,16 @@ module Core
 
         # for testing only
         def self.execute(**kws, &handler)
-          new(&handler).execute(**kws)
+          new(validate: false, &handler).execute(**kws)
         end
 
         private
 
         def validate_handler(handler)
-
+          StrictCaseMatcher.assert_cases_are_handled(handler, [
+            validation_failed(username: :required),
+            validation_failed(username: :unique),
+            user_created('')])
         end
 
         def validation_failed(errors)
