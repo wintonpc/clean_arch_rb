@@ -19,7 +19,7 @@ module UserCreateContract
         # is the field that was invalid, the value is a symbol of the reason
         # returns: Is ignored by the use case
         :validation_failed,
-        # decrypts a string
+        # Sucessfully creates a user
         #
         # arg: The ID of the created user
         # returns: Is ignored by the use case
