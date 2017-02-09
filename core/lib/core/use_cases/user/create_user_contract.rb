@@ -13,16 +13,17 @@ module UserCreateContract
         # such as defining correct behavior, format and data type
         # of arguments and return values.
         #
-        # encrypt a string
+        # Creating a user fails for a validation reason
         #
-        # arg: the string to encrypt
-        # returns: the encrypted string
+        # arg: A hash representing the validation errors, the key
+        # is the field that was invalid, the value is a symbol of the reason
+        # returns: Is ignored by the use case
         :validation_failed,
         # decrypts a string
         #
-        # arg: the string to decrypt
-        # returns: the decrypted string
-        :user_created,          # (encrpyted string)
+        # arg: The ID of the created user
+        # returns: Is ignored by the use case
+        :user_created
       ]
     end
 
