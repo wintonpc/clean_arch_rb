@@ -1,40 +1,53 @@
 require 'rspec'
+require 'helpers/make_a_spy_for_contract'
+require 'core/use_cases/user/create_user_contract'
 require 'core/use_cases/user'
 require 'core/gateways/user/fake_user_repository'
 
-describe 'Create user' do
-  CreateUser = Core::UseCases::User::Create
+describe Core::UseCases::User::Create do
+  let(:handler) { SpecHelpers::MakeASpyForContract.(UserCreateContract) }
+  let(:repo) { FakeUserRepository.new }
+  subject { Core::UseCases::User::Create }
 
-  class HandlerSpy
-    attr_reader :spy_validation_errors, :spy_created_user_id
-
-    def validation_failed(errors)
-      @spy_validation_errors = errors
-    end
-
-    def user_created(id)
-      @spy_created_user_id = id
-    end
+  def create_valid_user
+    subject.(username: 'valid name', handler: handler, repo: repo)
+    expect(handler.invoked_correctly?).to be true
   end
 
-  let(:handler) { HandlerSpy.new }
-  let(:repo) { FakeUserRepository.new }
+  def create_duplicate_user
+    create_valid_user
+    subject.(username: 'valid name', handler: handler, repo: repo)
+    expect(handler.invoked_correctly?).to be true
+  end
+
+  def create_missing_username_user
+    subject.(username: '', handler: handler, repo: repo)
+    expect(handler.invoked_correctly?).to be true
+  end
+
+  it 'meets the create user contract' do
+    expect { handler.class.validate_contract }.to_not raise_error
+  end
+
+  it 'invokes the handler collaborator correctly' do
+    create_valid_user
+    create_duplicate_user
+    create_missing_username_user
+    expect(handler.all_behaviors_invoked?).to be true
+  end
 
   it 'requires a username' do
-    CreateUser.execute(username: '', handler: handler, repo: repo)
-    expect(handler.spy_validation_errors).to include(username: :required)
-    expect(handler.spy_created_user_id).to_not be
+    create_missing_username_user
+    expect(handler.spy_validation_failed).to include(username: :required)
   end
 
   it 'requires usernames to be unique' do
-    CreateUser.execute(username: 'valid name', handler: handler, repo: repo)
-    CreateUser.execute(username: 'valid name', handler: handler, repo: repo)
-    expect(handler.spy_validation_errors).to include(username: :unique)
-    expect(handler.spy_created_user_id).to_not be
+    create_duplicate_user
+    expect(handler.spy_validation_failed).to include(username: :unique)
   end
 
   it 'sends an id for the created user back to the handler' do
-    CreateUser.execute(username: 'valid name', handler: handler, repo: repo)
-    expect(handler.spy_created_user_id).to be
+    create_valid_user
+    expect(handler.spy_user_created).to be
   end
 end
