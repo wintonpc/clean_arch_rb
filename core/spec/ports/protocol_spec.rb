@@ -6,6 +6,9 @@ module Predicates
     def string
       proc { |x| x.is_a?(String) }
     end
+    def id
+      proc { |x| x =~ /[0-9a-f]{24}/ }
+    end
     def hash
       proc { |x| x.is_a?(hash) }
     end
@@ -16,7 +19,7 @@ module Predicates
 end
 
 # a protocol...
-protocol :ascent do
+protocol :ui do
   # ... specifies two roles, each having an interface
   role :server do |s|
     s.create_user(string) # method contracts
@@ -35,12 +38,12 @@ protocol :ascent do
     end
     seq do
       server.create_user
-      client.user_created
+      client.user_created(id)
     end
   end
 end
 
-protocol :user_repo do
+protocol :repo do
   role :repo do |r|
     r.save(user)
   end
@@ -62,7 +65,8 @@ protocol :user_repo do
 end
 
 # A port joins two adapters which implement complimentary roles of a given protocol.
-# The port is responsible (at test time) for such things as
+# The port delegates calls to the appropriate adapter, and, at test time,
+# is responsible for
 # - verifying interactions are valid
 # - tracking interaction coverage (like code coverage)
 class Port
@@ -70,8 +74,8 @@ class Port
 end
 
 class Ascent
-  implement :ascent_port, :ascent, :server # defines `ascent_port` attribute, which is a Port bound to an AscentDomainAdapter
-  implement :repo_port, :user_repo, :client # defines `repo_port` attribute, which is a Port bound to an AscentAdapter using the :user_repo protocol
+  implement :ui_port, :ui, :server # defines `ui_port` attribute, which is a :ui Port bound to an AscentUIAdapter
+  implement :repo_port, :repo, :client # defines `repo_port` attribute, which is a :repo Port bound to an AscentRepoAdapter
 end
 
 class AscentDomainAdapter
@@ -90,16 +94,18 @@ class AscentRepoAdapter
 end
 
 class RailsAdapter
-
+  def validation_failed(info)
+    # ...
+  end
+  def user_created(id)
+    # ...
+  end
 end
 
 describe 'My behaviour' do
-
   it 'should do something' do
     ascent = Ascent.new
     rails = RailsAdapter.new
     ascent.ascent_port.bind(rails)
-
-    true.should == false
   end
 end
