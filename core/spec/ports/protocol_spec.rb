@@ -16,10 +16,10 @@ require 'ports'
 # - test-time verification
 #   - all methods implemented
 #   - all methods called
-# - be modular: group code and definitions however makes sense, independent of other concernes
-# - performance
-#   - transparently drop out of the way in production
-#     try to avoid even delegation
+# - be modular: group code and definitions however makes sense, independent of other concerns
+# - production performance
+#   - ports should transparently drop out of the way in production
+#   - try to avoid even delegation; prefer direct calls
 
 module CommonPredicates
   def string
@@ -61,7 +61,7 @@ protocol :create_user do
   end
 end
 
-# automatically creates a module ...
+# The protocol definition creates modules ...
 # module Protocols
 #   module CreateUser
 #     module Interactor
@@ -81,10 +81,10 @@ end
 # end
 
 module CreateUser
-  # we specify which protocol role we interact with
+  # We specify which protocol role we interact with
   # and necessarily occupy the opposite role.
   interacts_with client: Protocols::CreateUser::Client
-  #              ^^^^^^ the attribute name to use for interaction
+  #              ^^^^^^ the private attribute name to use for interaction
 
   # TBD: interacts_with repo: Protocols::Repo::Gateway
 
@@ -92,6 +92,8 @@ module CreateUser
   def create_user(name)
     if name.empty?
       client.validation_failed(username: :required)
+      # ^ client is actually a Port which monitors our interaction
+      # with whatever client adapter was wired up.
     elsif repo.find_by_username(username)
       client.validation_failed(username: :unique)
     else
@@ -106,10 +108,13 @@ module Ascent
   # adapters can be defined in the same module or separate modules.
   # adapters can be brought together into a single module for convenience.
   include CreateUser
+  # include ListUsers
+  # ...
 end
 
 module RailsCreateUser
   interacts_with interactor: Protocols::CreateUser::Interactor
+  # TBD:         ^^^^^^^^^^ incoming requests call methods off of this
 
   def user_created(id)
     render 'success'
@@ -139,6 +144,11 @@ describe CreateUser do
   let(:port) { Port.connect(subject, rails) }
 
   it 'should do something' do
+    # I'm least sure about this...
+    # Since the interactions have the potential to be highly expressive,
+    # that should make the tests simpler, right?
+    # The more expressive the interactions are, the more verification
+    # the Port can do for free.
     port.create_user('valid name')
     expect(port).to see_interaction {
       server.create_user('valid name')
