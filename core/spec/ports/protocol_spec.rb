@@ -1,6 +1,25 @@
 require 'rspec'
 require 'ports'
 
+# Objectives
+# - create framework for ports & adapters pattern
+# - symmetry between interacting adapters
+# - model method signature
+#   - parameters types, predicates
+# - model a variety of interaction styles
+#   - sync vs. async
+#   - request/response
+#   - more complex conversations
+#     - state machine
+#       - loops
+#       - branches
+# - test-time verification
+#   - all methods implemented
+#   - all methods called
+# - performance
+#   - transparently drop out of the way in production
+#     try to avoid even delegation
+
 module Predicates
   refine Module do
     def string
@@ -18,10 +37,12 @@ module Predicates
   end
 end
 
+using Predicates
+
 # a protocol...
 protocol :ui do
   # ... specifies two roles, each having an interface
-  role :server do |s|
+  role :interactor do |s|
     s.create_user(string) # method contracts
   end
 
@@ -65,8 +86,8 @@ protocol :repo do
 end
 
 # A port joins two adapters which implement complimentary roles of a given protocol.
-# The port delegates calls to the appropriate adapter, and, at test time,
-# is responsible for
+# The port delegates calls to the appropriate adapter,
+# and, at test time, is responsible for
 # - verifying interactions are valid
 # - tracking interaction coverage (like code coverage)
 class Port
@@ -79,6 +100,7 @@ class Ascent
 end
 
 class AscentDomainAdapter
+  include Protocols::
   def create_user(name)
     # ...
   end
