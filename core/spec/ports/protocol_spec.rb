@@ -58,6 +58,8 @@ protocol :create_user do
       server.create_user
       client.user_created(id)
     end
+    # ... this would be powerful enough to DRY similarities between interactions,
+    # all the way up to expressing state machines.
   end
 end
 
