@@ -29,7 +29,7 @@ module CommonPredicates
     proc { |x| x =~ /[0-9a-f]{24}/ }
   end
   def hash
-    proc { |x| x.is_a?(hash) }
+    proc { |x| x.is_a?(Hash) }
   end
   def user
     proc { true } # TODO
